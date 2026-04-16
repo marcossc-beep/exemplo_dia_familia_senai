@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHOW DO TERCEIRÃO! (Versão Offline)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Bungee&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --azul: #2d00f7;
+            --verde: #bcff00;
+            --rosa: #ff00ff;
+            --amarelo: #ffe600;
+            --preto: #000;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            background: var(--azul);
+            background-image: radial-gradient(var(--rosa) 1px, transparent 1px);
+            background-size: 30px 30px;
+            font-family: 'Bungee', cursive;
+            color: white;
+            min-height: 100vh;
+        }
+
+        /* ── CARDS ── */
+        .card {
+            background: var(--verde);
+            border: 6px solid var(--preto);
+            box-shadow: 12px 12px 0 var(--rosa);
+            color: var(--preto);
+        }
+        .card-yellow {
+            background: var(--amarelo);
+            border: 6px solid var(--preto);
+            box-shadow: 12px 12px 0 var(--azul);
+            color: var(--preto);
+        }
+        .card-dark {
+            background: #111;
+            border: 6px solid var(--verde);
+            box-shadow: 12px 12px 0 var(--verde);
+            color: white;
+        }
+
+        /* ── BUTTONS ── */
+        .btn {
+            border: 4px solid var(--preto);
+            box-shadow: 6px 6px 0 var(--preto);
+            transition: all 0.08s;
+            cursor: pointer;
+            font-family: 'Bungee', cursive;
+            font-size: 1rem;
+        }
+        .btn:active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--preto); }
+        .btn-pink  { background: var(--rosa); color: white; }
+        .btn-blue  { background: var(--azul); color: white; }
+        .btn-green { background: var(--verde); color: var(--preto); }
+        .btn-yellow{ background: var(--amarelo); color: var(--preto); }
+        .btn-red   { background: #ff2020; color: white; }
+
+        /* ── INPUTS ── */
+        .input-retro {
+            border: 4px solid var(--preto);
+            background: white;
+            font-family: 'Bungee', cursive;
+            outline: none;
+            padding: 10px 14px;
+            width: 100%;
+            font-size: 0.95rem;
+            box-shadow: 4px 4px 0 var(--preto);
+        }
+        .input-retro:focus { box-shadow: 4px 4px 0 var(--rosa); }
+
+        /* ── PIXEL FONT ── */
+        .pf { font-family: 'Press Start 2P', cursive; font-size: 9px; line-height: 1.8; }
+
+        /* ── NAV TABS ── */
+        .tab { border: 4px solid var(--preto); cursor: pointer; padding: 10px 20px; font-size: 0.85rem; transition: all 0.1s; }
+        .tab.active { background: var(--verde); color: var(--preto); box-shadow: 4px 4px 0 var(--preto); transform: translateY(-4px); }
+        .tab.inactive { background: #555; color: #ccc; }
+
+        /* ── OPTION LETTER BADGE ── */
+        .badge {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; min-width: 32px;
+            background: var(--preto); color: white;
+            border: 3px solid white;
+            font-size: 1rem; font-family: 'Bungee', cursive;
+        }
+        .badge-answer {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 36px; height: 36px; min-width: 36px;
+            border: 3px solid var(--preto);
+            font-size: 1rem; font-family: 'Bungee', cursive;
+        }
+
+        /* ── PROGRESS BAR ── */
+        .progress-bg { background: var(--preto); border: 3px solid var(--preto); height: 20px; }
+        .progress-fill { background: var(--rosa); height: 100%; transition: width 0.4s ease; }
+
+        /* ── ANSWER FEEDBACK ── */
+        .option-btn { transition: all 0.1s; }
+        .option-btn.correct  { background: #00ff88 !important; border-color: var(--preto) !important; }
+        .option-btn.wrong    { background: #ff2020 !important; border-color: var(--preto) !important; color: white !important; }
+
+        /* ── SCANLINE overlay ── */
+        .scanlines {
+            pointer-events: none;
+            position: fixed; inset: 0; z-index: 9999;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.04) 0px, rgba(0,0,0,0.04) 1px, transparent 1px, transparent 3px);
+        }
+
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+        .blink { animation: blink 1s step-end infinite; }
+
+        @keyframes slideIn { from{transform:translateY(30px);opacity:0} to{transform:translateY(0);opacity:1} }
+        .slide-in { animation: slideIn 0.35s ease forwards; }
+
+        .hidden { display: none !important; }
+        .scrollable { max-height: 70vh; overflow-y: auto; }
+
+        #toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: var(--verde); border: 4px solid var(--preto);
+            box-shadow: 6px 6px 0 var(--preto);
+            padding: 12px 28px; font-size: 1rem;
+            color: var(--preto); z-index: 10000;
+            transition: opacity 0.3s;
+        }
+        #toast.hidden { opacity: 0; pointer-events: none; }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-start p-4 pt-6">
+
+<div class="scanlines"></div>
+<div id="toast" class="hidden"></div>
+
+<div class="w-full max-w-lg mb-6 text-center">
+    <h1 class="text-5xl italic transform -rotate-1 mb-1" style="text-shadow: 4px 4px 0 var(--rosa), 8px 8px 0 #000;">
+        SHOW DO<br>TERCEIRÃO!
+    </h1>
+    <p class="pf mt-2 text-yellow-300">MODO TESTE OFFLINE</p>
+
+    <div class="flex gap-0 mt-6 justify-center">
+        <button class="tab active" id="tab-quiz"   onclick="switchTab('quiz')">🎮 QUIZ</button>
+        <button class="tab inactive" id="tab-admin" onclick="switchTab('admin')">⚙️ ADM</button>
+        <button class="tab inactive" id="tab-rank"  onclick="switchTab('rank')">🏆 RANK</button>
+    </div>
+</div>
+
+<div id="section-quiz" class="w-full max-w-lg">
+    <div id="quiz-login" class="card p-8 text-center slide-in">
+        <div class="text-6xl mb-4">👨‍👩‍👧</div>
+        <h2 class="text-2xl mb-2">VOCÊ CONHECE<br>SEU FILHO(A)?</h2>
+        <input id="parent-name" class="input-retro mb-3" type="text" placeholder="SEU NOME">
+        <input id="student-name" class="input-retro mb-5" type="text" placeholder="NOME DO FILHO(A)">
+        <button class="btn btn-pink w-full py-4 text-xl" onclick="startQuiz()">▶ JOGAR!</button>
+    </div>
+
+    <div id="quiz-game" class="card p-6 hidden slide-in">
+        <div class="flex justify-between items-center mb-3">
+            <span class="pf" id="q-counter">PERGUNTA 1/5</span>
+            <span class="pf" id="score-display" style="color:var(--rosa);">★ 0 PTS</span>
+        </div>
+        <div class="progress-bg mb-5 w-full">
+            <div class="progress-fill" id="progress-bar" style="width:0%"></div>
+        </div>
+        <p class="text-xl leading-snug mb-6" id="question-text">Carregando...</p>
+        <div id="options-container" class="space-y-3"></div>
+    </div>
+
+    <div id="quiz-result" class="card-dark p-8 text-center hidden slide-in">
+        <div class="text-6xl mb-4" id="result-emoji">🏆</div>
+        <h2 class="text-3xl mb-2 text-yellow-300">FIM DE JOGO!</h2>
+        <p class="text-5xl font-bold mb-2" id="final-score" style="color:var(--rosa);">0</p>
+        <p class="pf mb-1" style="color:var(--verde);">PONTOS</p>
+        <p class="text-lg mt-4 mb-6" id="result-msg"></p>
+        <button class="btn btn-yellow w-full py-3 text-lg" onclick="resetQuiz()">↩ VOLTAR</button>
+    </div>
+</div>
+
+<div id="section-admin" class="w-full max-w-lg hidden">
+    <div id="admin-login" class="card-yellow p-8 text-center slide-in">
+        <div class="text-5xl mb-3">🔐</div>
+        <h2 class="text-2xl mb-2">ÁREA DO PROFESSOR</h2>
+        <input id="admin-password" class="input-retro mb-4" type="password" placeholder="SENHA (senai123)">
+        <button class="btn btn-blue w-full py-3 text-lg" onclick="loginAdmin()">ENTRAR</button>
+    </div>
+
+    <div id="admin-panel" class="hidden">
+        <div class="card-yellow p-6 mb-5 slide-in">
+            <h2 class="text-xl mb-4">➕ NOVA PERGUNTA</h2>
+            <textarea id="q-text" class="input-retro mb-4" rows="2" placeholder="Pergunta..."></textarea>
+            <div id="options-inputs" class="space-y-2 mb-4"></div>
+            <label class="pf block mb-2">QUAL A CORRETA?</label>
+            <div id="correct-selector" class="flex gap-2 mb-5"></div>
+            <button class="btn btn-blue w-full py-3 text-lg" onclick="saveQuestion()">💾 SALVAR</button>
+        </div>
+        <div class="card p-6 slide-in">
+            <h2 class="text-xl mb-4">📋 CADASTRADAS</h2>
+            <div id="questions-list" class="scrollable space-y-3 pf text-[10px]"></div>
+        </div>
+    </div>
+</div>
+
+<div id="section-rank" class="w-full max-w-lg hidden">
+    <div class="card-dark p-6 slide-in">
+        <h2 class="text-2xl text-center text-yellow-300 mb-4">🏆 RANKING GERAL</h2>
+        <div id="rank-list" class="space-y-3"></div>
+        <button class="btn btn-red w-full py-2 mt-6 text-xs" onclick="clearRanking()">Zerar Ranking</button>
+    </div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────────────────────────────────────
+   DATABASE MANAGER (LocalStorage)
+   Simula o comportamento do servidor Node + Postgres
+───────────────────────────────────────────────────────────────────────────── */
+const DB = {
+    getQuestions: () => JSON.parse(localStorage.getItem('quiz_questions') || '[]'),
+    saveQuestions: (data) => localStorage.setItem('quiz_questions', JSON.stringify(data)),
+    getRank: () => JSON.parse(localStorage.getItem('quiz_rank') || '[]'),
+    saveRank: (data) => localStorage.setItem('quiz_rank', JSON.stringify(data))
+};
+
+// Dados Iniciais caso esteja vazio
+if (DB.getQuestions().length === 0) {
+    DB.saveQuestions([
+        { id: 1, question: "Qual a cor favorita dele(a)?", options: ["Azul", "Preto", "Rosa", "Verde"], correct_answer: 0 },
+        { id: 2, question: "O que ele(a) prefere comer?", options: ["Pizza", "Sushi", "Hambúrguer", "Salada"], correct_answer: 2 }
+    ]);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   LOGICA DO APP
+───────────────────────────────────────────────────────────────────────────── */
+const ADMIN_PASS = 'senai123';
+const LETTERS = ['A','B','C','D'];
+const COLORS  = ['#ff00ff','#2d00f7','#ff6600','#00cc44'];
+
+let quizQuestions = [];
+let quizIndex = 0;
+let quizScore = 0;
+let answered = false;
+let correctCount = 0;
+let selectedCorrect = 0;
+
+function switchTab(tab) {
+    ['quiz','admin','rank'].forEach(t => {
+        document.getElementById(`section-${t}`).classList.add('hidden');
+        document.getElementById(`tab-${t}`).classList.replace('active','inactive');
+    });
+    document.getElementById(`section-${tab}`).classList.remove('hidden');
+    document.getElementById(`tab-${tab}`).classList.replace('inactive','active');
+    if(tab === 'rank') loadRanking();
+}
+
+function toast(msg, ok=true) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.style.background = ok ? 'var(--verde)' : '#ff2020';
+    el.style.color = ok ? 'var(--preto)' : 'white';
+    el.classList.remove('hidden');
+    setTimeout(() => el.classList.add('hidden'), 2000);
+}
+
+/* ── QUIZ LOGIC ── */
+function startQuiz() {
+    const pName = document.getElementById('parent-name').value.trim();
+    const sName = document.getElementById('student-name').value.trim();
+    if(!pName || !sName) return toast('Preencha os nomes!', false);
+
+    // Pega 5 aleatórias
+    const all = DB.getQuestions();
+    if(all.length === 0) return toast('Sem perguntas no banco!', false);
+    quizQuestions = all.sort(() => 0.5 - Math.random()).slice(0, 5);
+    
+    quizIndex = 0; quizScore = 0; correctCount = 0;
+    document.getElementById('quiz-login').classList.add('hidden');
+    document.getElementById('quiz-game').classList.remove('hidden');
+    showQuestion();
+}
+
+function showQuestion() {
+    answered = false;
+    const q = quizQuestions[quizIndex];
+    document.getElementById('q-counter').textContent = `PERGUNTA ${quizIndex+1}/${quizQuestions.length}`;
+    document.getElementById('score-display').textContent = `★ ${quizScore} PTS`;
+    document.getElementById('progress-bar').style.width = `${(quizIndex/quizQuestions.length)*100}%`;
+    document.getElementById('question-text').textContent = q.question;
+
+    const container = document.getElementById('options-container');
+    container.innerHTML = '';
+    q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn btn w-full py-3 px-4 text-left flex items-center gap-3 bg-white text-black';
+        btn.innerHTML = `<span class="badge" style="background:${COLORS[i]}">${LETTERS[i]}</span><span>${opt}</span>`;
+        btn.onclick = () => checkAnswer(i, btn);
+        container.appendChild(btn);
+    });
+}
+
+function checkAnswer(idx, btn) {
+    if(answered) return;
+    answered = true;
+    const correct = quizQuestions[quizIndex].correct_answer;
+    const btns = document.querySelectorAll('.option-btn');
+
+    btns.forEach((b, i) => {
+        if(i === correct) b.classList.add('correct');
+        else if(i === idx) b.classList.add('wrong');
+    });
+
+    if(idx === correct) {
+        quizScore += 100;
+        correctCount++;
+    }
+
+    setTimeout(() => {
+        quizIndex++;
+        if(quizIndex < quizQuestions.length) showQuestion();
+        else finishQuiz();
+    }, 1200);
+}
+
+function finishQuiz() {
+    const pName = document.getElementById('parent-name').value;
+    const sName = document.getElementById('student-name').value;
+    
+    // Salva no Ranking Local
+    const rank = DB.getRank();
+    rank.push({ parent: pName, student: sName, score: quizScore, date: Date.now() });
+    DB.saveRank(rank);
+
+    document.getElementById('quiz-game').classList.add('hidden');
+    document.getElementById('quiz-result').classList.remove('hidden');
+    document.getElementById('final-score').textContent = quizScore;
+    document.getElementById('result-msg').textContent = quizScore >= 300 ? "Mandou bem!" : "Pode melhorar, hein?";
+}
+
+function resetQuiz() {
+    document.getElementById('quiz-result').classList.add('hidden');
+    document.getElementById('quiz-login').classList.remove('hidden');
+}
+
+/* ── ADMIN LOGIC ── */
+function loginAdmin() {
+    if(document.getElementById('admin-password').value === ADMIN_PASS) {
+        document.getElementById('admin-login').classList.add('hidden');
+        document.getElementById('admin-panel').classList.remove('hidden');
+        initAdminForm();
+        renderAdminQuestions();
+    } else toast('Senha Incorreta!', false);
+}
+
+function initAdminForm() {
+    const inputs = document.getElementById('options-inputs');
+    const selector = document.getElementById('correct-selector');
+    inputs.innerHTML = ''; selector.innerHTML = '';
+    LETTERS.forEach((l, i) => {
+        inputs.innerHTML += `<div class="flex gap-2"><span class="badge" style="background:${COLORS[i]}">${l}</span>
+            <input id="opt-${i}" class="input-retro" placeholder="Opção ${l}..."></div>`;
+        
+        const btn = document.createElement('button');
+        btn.className = `badge-answer btn bg-white`;
+        btn.id = `sel-${i}`;
+        btn.textContent = l;
+        btn.onclick = () => {
+            selectedCorrect = i;
+            document.querySelectorAll('.badge-answer').forEach((b,idx)=> b.style.background = idx===i?COLORS[i]:'#fff');
+        };
+        selector.appendChild(btn);
+    });
+    selectedCorrect = 0;
+    document.getElementById('sel-0').style.background = COLORS[0];
+}
+
+function saveQuestion() {
+    const txt = document.getElementById('q-text').value;
+    const opts = [0,1,2,3].map(i => document.getElementById(`opt-${i}`).value);
+    if(!txt || opts.some(o => !o)) return toast('Preencha tudo!', false);
+
+    const all = DB.getQuestions();
+    all.push({ id: Date.now(), question: txt, options: opts, correct_answer: selectedCorrect });
+    DB.saveQuestions(all);
+    
+    toast('Salvo!');
+    document.getElementById('q-text').value = '';
+    renderAdminQuestions();
+}
+
+function renderAdminQuestions() {
+    const list = document.getElementById('questions-list');
+    const all = DB.getQuestions();
+    list.innerHTML = all.map(q => `
+        <div class="border-b border-black pb-2 flex justify-between items-center">
+            <div><b>${q.question}</b><br>${q.options[q.correct_answer]} ✅</div>
+            <button class="text-red-600 font-bold" onclick="deleteQuestion(${q.id})">Apagar</button>
+        </div>
+    `).join('');
+}
+
+function deleteQuestion(id) {
+    const all = DB.getQuestions().filter(q => q.id !== id);
+    DB.saveQuestions(all);
+    renderAdminQuestions();
+}
+
+/* ── RANKING LOGIC ── */
+function loadRanking() {
+    const list = document.getElementById('rank-list');
+    const data = DB.getRank().sort((a,b) => b.score - a.score).slice(0, 10);
+    
+    if(data.length === 0) {
+        list.innerHTML = '<p class="text-center pf">Nenhum recorde ainda</p>';
+        return;
+    }
+
+    list.innerHTML = data.map((r, i) => `
+        <div class="flex justify-between items-center bg-black/50 p-3 border-l-4 border-yellow-400">
+            <div class="pf text-[10px]">
+                <span class="text-yellow-400">#${i+1}</span> ${r.parent}<br>
+                <small class="text-gray-400">filho(a): ${r.student}</small>
+            </div>
+            <div class="text-2xl text-yellow-400">${r.score}</div>
+        </div>
+    `).join('');
+}
+
+function clearRanking() {
+    if(confirm('Zerar ranking?')) {
+        DB.saveRank([]);
+        loadRanking();
+    }
+}
+</script>
+</body>
+</html>
