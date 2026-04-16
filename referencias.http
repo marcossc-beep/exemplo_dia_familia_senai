@@ -1,0 +1,52 @@
+### CADASTRAR UM NOVO FORMULÁRIO
+POST http://localhost:3000/formularios
+Content-Type: application/json
+
+{
+    "titulo": "Show do Terceirão - Conhecimentos Brasileiros"
+}
+
+###
+
+### LISTAR TODOS OS FORMULÁRIOS
+GET http://localhost:3000/formularios
+
+###
+
+### CADASTRAR A PRIMEIRA QUESTÃO
+POST http://localhost:3000/questoes
+Content-Type: application/json
+
+{
+    "enunciado": "Qual animal representa a nota de 200 reais?",
+    "alternativa_a": "Onça Pintada",
+    "alternativa_b": "Lobo Guará",
+    "alternativa_c": "Mico Leão Dourado",
+    "alternativa_d": "Capivara",
+    "resposta_correta": "B",
+    "formulario_id": 1
+}
+
+###
+
+### LISTAR TODAS AS QUESTÕES
+GET http://localhost:3000/questoes
+
+###
+
+### SALVAR UM RESULTADO FINAL (O "9/10" por exemplo)
+POST http://localhost:3000/resultados
+Content-Type: application/json
+
+{
+    "nome_pai": "Carlos Silva",
+    "nome_filho": "Ana Silva",
+    "acertos": 9,
+    "total_questoes": 10,
+    "formulario_id": 1
+}
+
+###
+
+### LISTAR O RANKING (Puxa os resultados ordenados por acertos)
+GET http://localhost:3000/resultados
